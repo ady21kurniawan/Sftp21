@@ -79,13 +79,88 @@ class Sftp21 implements AdapterInterface{
         return $this->root;
     }
 
+    public function copy($path, $newpath) 
+    {
+        if( $this->sftp_libs->file_exists($newpath) )
+        {
+            throw new \Exception("new path :". $newpath ."already exists");
+        }
+
+        $file_content = $this->readStream($path);
+        if(! isset($file_content["stream"]) )
+        {
+            throw new \Exception("failed read file on : " . $$path);
+        }
+
+        return $this->writeStream($newpath, $file_content["stream"]);
+    }
+
+    public function deleteDir($pathname = '') {
+        $isDirExists = $this->sftp_libs->chdir($pathname);
+
+        if( !$isDirExists )
+        {
+            throw new \Exception("directory not exists");
+        }
+        $isEmptyDir = $this->listContents($pathname);
+        if(count($isEmptyDir))
+        {
+            throw new \Exception("directory not empty !!");
+        }
+        
+        $pathname = $this->root ."/". $pathname."/";
+        // always use full path !!
+        return $this->sftp_libs->rmdir($pathname);
+    }
+
+    public function createDir($dirname = '', $recursive = false) {
+        
+        $isDirExists = $this->sftp_libs->chdir($dirname);
+        if( $isDirExists )
+        {
+            throw new \Exception("directory already exists");
+        }
+        return $this->sftp_libs->mkdir($dirname);
+    }
+
+    public function delete($path = '') {
+        return $this->sftp_libs->delete($path);
+    }
+
+    public function readStream($path = '') {
+        $isReadAble = $this->sftp_libs->is_readable($path);    
+        if($isReadAble)
+        {
+            $content = $this->sftp_libs->get($path);
+            return [ 'stream' => $this->getDataStream($content) ];
+        }
+        return [ 'stream' => '' ];
+    }
+
+    public function read($path = '') {
+        $isReadAble = $this->sftp_libs->is_readable($path);    
+        if($isReadAble)
+        {
+            $content = $this->sftp_libs->get($path);
+            return [ 'contents' => $content ];
+        }
+        return [ 'contents' => '' ];
+    }
+
+    public function has($path = '') 
+    {
+        return $this->sftp_libs->file_exists($path);
+    }
+
     public function listContents($directory = '' , $recursive = false) {
-        // Implementasi metode read
+
         if(empty($directory || is_null($directory)))
         {
             $directory = $this->workdir();
+        }else{
+            $directory = $this->workdir()."/".$directory;
         }
-       
+
         $lists = $this->sftp_libs->rawlist($directory);
         $listing = [];
         foreach($lists as $list)
@@ -163,35 +238,7 @@ class Sftp21 implements AdapterInterface{
         // Implementasi metode writeStream
     }
 
-    public function delete($path) {
-        // Implementasi metode delete
-    }
-
-    public function read($path) {
-        // Implementasi metode read
-    }
-
     public function rename($path, $newpath) {
-        // Implementasi metode read
-    }
-
-    public function copy($path, $newpath) {
-        // Implementasi metode read
-    }
-
-    public function deleteDir($dirname) {
-        // Implementasi metode read
-    }
-
-    public function has($path) {
-        // Implementasi metode read
-    }
-
-    public function readStream($path) {
-        // Implementasi metode read
-    }
-
-    public function createDir($directory = '', $recursive = false) {
         // Implementasi metode read
     }
 
