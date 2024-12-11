@@ -7,7 +7,7 @@ use League\Flysystem\AdapterInterface;
 
 class Sftp21 implements AdapterInterface{
     private $host;
-    private $port;
+    private $port = 22;
     private $username;
     private $password;
     private $root;
