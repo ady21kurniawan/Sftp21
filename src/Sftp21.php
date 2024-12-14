@@ -79,6 +79,179 @@ class Sftp21 implements AdapterInterface{
         return $this->root;
     }
 
+    public function getMimetype($path) 
+    {
+        if(! $this->has("{$this->root}/$path") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$remoteFile");
+        } 
+    }
+
+    public function getMetadata($path)
+    {
+        if(! $this->has("{$this->root}/$path") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$remoteFile");
+        }
+        
+        return $this->sftp_libs->stat($path);
+    }
+
+    /**
+     * return access time
+     */
+    public function getTimestamp($path)
+    {
+        if(! $this->has("{$this->root}/$path") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$remoteFile");
+        } 
+
+        $file_info = $this->sftp_libs->stat($path);
+        return [
+            "timestamp" => $file_info["atime"]
+        ];
+    }
+
+    public function setVisibility($path, $visibility) 
+    {
+        if(! $this->has("{$this->root}/$path") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$remoteFile");
+        }
+
+        if(! preg_match('/^[0-7]+$/', $visibility) === 1)
+        {
+            throw new \Exception("please use octal number ! ");
+        }
+
+        if(is_string($visibility))
+        {
+            throw new \Exception("please use octal number not string ! ");
+        }
+        return $this->sftp_libs->chmod($visibility, $path);
+    }
+
+    public function getVisibility($path) 
+    {
+        if(! $this->has("{$this->root}/$path") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$remoteFile");
+        }
+        
+        $fileinfo = $this->sftp_libs->stat($path);
+        $mode = decoct($fileinfo["mode"]);
+        $owner_permission = $mode & 00400;
+        $others_permission = $mode & 00004;
+        if ($owner_permission && $others_permission) 
+        {
+            $fileinfo["visibility"] = "public";
+        } else 
+        {
+            $fileinfo["visibility"] = "private";
+        }
+        return $fileinfo;
+    }
+
+    public function getFileInfo($remoteFile) 
+    {
+        
+        if(! $this->has("{$this->root}/$remoteFile") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$remoteFile");
+        }
+        return $this->sftp_libs->stat($remoteFile);
+    }
+
+    public function getSize($remoteFile) 
+    {
+        
+        if(! $this->has("{$this->root}/$remoteFile") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$remoteFile");
+        }
+        return $this->sftp_libs->stat($remoteFile);
+    }
+
+    public function move($pathFile, $destinationDirectory = null)
+    {
+        if(is_null($destinationDirectory) || empty($destinationDirectory))
+        {
+            $destinationDirectory = "/";
+        }
+        if(! $this->has("{$this->root}/$pathFile") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$pathFile");
+        }
+
+        if($destinationDirectory[0] !== "/")
+        {
+            $destinationDirectory = "/{$destinationDirectory }";
+        }
+
+        if( ! $this->sftp_libs->is_dir("{$this->root}{$destinationDirectory}") )
+        {
+            throw new \Exception("Destination Directory Not found : {$this->root}/$destinationDirectory");
+        }
+        $pathFileName = explode("/", $pathFile);
+        $filename = $pathFileName[count($pathFileName) -1];
+        
+        return  $this->sftp_libs->rename("{$this->root}/$pathFile", "{$this->root}/{$destinationDirectory}/{$filename}");
+    } 
+
+    public function rename($path, $newpath) 
+    {
+        if(! $this->has("{$this->root}/$path") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$path");
+        }
+        
+        $pathCheck = explode("/", $path);
+        $newPathCheck = explode("/", $newpath);
+        
+        if( count($pathCheck) != count($newPathCheck) )
+        {
+            throw new \Exception("file should be in one same folder1 !");
+        }
+
+        for($index = 0 ; $index < count($pathCheck); $index++ )
+        {
+            if($index == count($pathCheck) -1 )
+            {
+                break;
+            }
+
+            if($pathCheck[$index] != $newPathCheck[$index] )
+            {
+                throw new \Exception("file should be in one same folder2 !");
+            }
+        }
+
+        return  $this->sftp_libs->rename("{$this->root}/$path", "{$this->root}/$newpath");
+    }
+
+    public function update($path, $contents, $visibility = null) {
+        if(! $this->has("{$this->root}/$path") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$path");
+        }
+        return $this->sftp_libs->put("{$this->root}/$path" , $contents, SFTP::SOURCE_STRING);
+    }
+
+    public function updateStream($path, $resource, $visibility = null) {
+        
+        if ( ! is_resource($resource) || get_resource_type($resource) !== 'stream') {
+            throw new \Exception("resource should be Stream ! or use getDataStream or getDataStreamBiner function First");
+        }
+
+        if(! $this->has("{$this->root}/$path") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$path");
+        }
+
+        return $this->sftp_libs->put("{$this->root}/$path" , $resource, SFTP::SOURCE_STRING);
+    }
+
     public function copy($path, $newpath) 
     {
         if( $this->sftp_libs->file_exists($newpath) )
@@ -204,6 +377,14 @@ class Sftp21 implements AdapterInterface{
         return $this->sftp_libs->put($path, $contents, SFTP::SOURCE_STRING);
     }
 
+    public function getDataStreamBiner($resource)
+    {
+        $stream = fopen('php://temp', 'rb+');  // Membuka stream sementara
+        fwrite($stream, $resource);  // Menulis konten ke stream
+        rewind($stream);  // Pindahkan posisi file pointer ke awal
+        return $stream;
+    }
+
     public function getDataStream($resource)
     {
         $stream = fopen('php://temp', 'r+');  // Membuka stream sementara
@@ -229,45 +410,5 @@ class Sftp21 implements AdapterInterface{
         }
         return $this->sftp_libs->put($path, $resource_stream);
     }
-
-    public function update($path, $contents, $visibility = null) {
-        // Implementasi metode update
-    }
-
-    public function updateStream($path, $resource, $visibility = null) {
-        // Implementasi metode writeStream
-    }
-
-    public function rename($path, $newpath) {
-        // Implementasi metode read
-    }
-
-    public function getSize($path) {
-        // Implementasi metode read
-    }
-
-    public function getMimetype($path) {
-        // Implementasi metode read
-    }
-
-    public function setVisibility($path, $visibility) {
-        // Implementasi metode read
-    }
-
-    public function getVisibility($path) {
-        // Implementasi metode read
-    }
-
-    public function getMetadata($path)
-    {
-
-    }
-
-    public function getTimestamp($path)
-    {
-
-    }
-
-
 
 }
