@@ -1,6 +1,7 @@
 {
     "name": "ady21kurniawan/sftp21",
     "type": "library",
+    "license": "Aether Digital Indonesia",
     "autoload": {
         "psr-4": {
             "Ady21kurniawan\\Sftp21\\": "src/"
