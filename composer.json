@@ -1,7 +1,6 @@
 {
     "name": "ady21kurniawan/sftp21",
     "type": "library",
-    "license": "PHP License 3.0",
     "autoload": {
         "psr-4": {
             "Ady21kurniawan\\Sftp21\\": "src/"
