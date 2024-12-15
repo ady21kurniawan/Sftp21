@@ -79,12 +79,37 @@ class Sftp21 implements AdapterInterface{
         return $this->root;
     }
 
+    public function downloadFile($pathFileRemote, $localPath)
+    {
+        if(! $this->has("{$this->root}/$pathFileRemote") )
+        {
+            throw new \Exception("File Not found On path : {$this->root}/$pathFileRemote");
+        }
+        
+        $folderPath = dirname(__DIR__) ."/". dirname($localPath);
+        if( ! is_dir($folderPath) )
+        {
+            throw new \Exception("Local Path Download Not exists : {$folderPath}");
+        }
+        return $this->sftp_libs->get("{$this->root}/$pathFileRemote", $localPath);
+    }
+
     public function getMimetype($path) 
     {
         if(! $this->has("{$this->root}/$path") )
         {
-            throw new \Exception("File Not found On path : {$this->root}/$remoteFile");
-        } 
+            throw new \Exception("File Not found On path : {$this->root}/$path");
+        }
+        $get_file = $this->sftp_libs->get("{$this->root}/$path");
+        $tempfile = tmpfile();
+        fwrite($tempfile, $get_file);
+        rewind($tempfile);
+        $mimetype = mime_content_type($tempfile);
+        fclose($tempfile);
+        return [
+            "mimetype" => $mimetype
+        ];
+        
     }
 
     public function getMetadata($path)
