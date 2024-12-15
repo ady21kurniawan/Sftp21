@@ -21,18 +21,133 @@ $filesystem = new Filesystem($sftp_21);
  * use case testing
  */
 
+//testDownloadFile($sftp_21);
+//testGetMymeType($filesystem, $sftp_21);
+//testGetTimestamp($filesystem, $sftp_21);
+//testGetmetaData($filesystem);
+//setVisibility($filesystem);
+//getVisibility($filesystem);
+// testGetSize($filesystem, $sftp_21);
+//testMove($sftp_21);
+//testRename($sftp_21, $filesystem);
+//testUpdateStream($sftp_21, $filesystem);
+//testUpdate($sftp_21, $filesystem);
+//testCopy21($sftp_21);
 //testCopy($filesystem);
 //testDeleteDir($filesystem);
-//testCreateDir($filesystem);
+//testCreateDir($filesystem, $sftp_21);
 //testDelete($filesystem);
-//testReadStream($filesystem);
+//testReadStream($filesystem, $sftp_21);
 //testHas($filesystem);
 //testRead($filesystem);
-//testListContents($filesystem);
+//testListContents($filesystem, $sftp_21);
 //testWriteStream($filesystem, $sftp_21);
 //testWrite($filesystem);
+//testIsConnected($sftp_21);
+//testGetDataStream($sftp_21);
+//testGetDataStreamBiner($sftp_21);
 
+function testGetDataStreamBiner($sftp_21)
+{
+    $new_content = "this is content of new coppier Stream 2010 with filesystem";
+    $stream_content = $sftp_21->getDataStreamBiner($new_content);
+    var_dump($stream_content).die();
+}
 
+function testGetDataStream($sftp_21)
+{
+    $new_content = "this is content of new coppier Stream 2010 with filesystem";
+    $stream_content = $sftp_21->getDataStream($new_content);
+    var_dump($stream_content).die();
+}
+
+function testIsConnected($sftp_21)
+{
+    $is_connect = $sftp_21->isConnected();
+    var_dump($is_connect);
+}
+
+function testDownloadFile($sftp_21)
+{
+    $download_file = $sftp_21->downloadFile("folder_testing/image-image.png", "./download_file/image-image.png");
+    var_dump($download_file).die();
+}
+
+function testGetMymeType($filesystem, $sftp_21)
+{
+    $mymeType = $filesystem->getMimetype("folder_testing/image-image.png");
+    var_dump($mymeType).die(); 
+}
+
+function testGetTimestamp($filesystem, $sftp_21)
+{
+    $fileinfo = $filesystem->getTimestamp("daily_subscription_report_MSME_2024-11-01.csv");
+    var_dump($fileinfo).die();
+}
+
+function testGetmetaData($filesystem)
+{
+    $meta_data = $filesystem->getMetaData("daily_subscription_report_MSME_2024-11-01.csv");
+    var_dump($meta_data).die();
+}
+
+function setVisibility($filesystem)
+{
+    // public : 0644 | 0700
+    $setVisible = $filesystem->setVisibility("daily_subscription_report_MSME_2024-11-01.csv", 0777);
+    var_dump($setVisible).die();
+}
+
+function getVisibility($filesystem)
+{
+    $getVisible = $filesystem->getVisibility("daily_subscription_report_MSME_2024-11-01.csv");
+    //$getVisible = $filesystem->getVisibility("example212_copy.txt");
+    var_dump($getVisible).die();
+}
+
+//in byte
+function testGetSize($filesystem, $sftp_21)
+{
+    // $filesize = $filesystem->getSize("daily_subscription_report_MSME_2024-11-01.csv");
+    $filesize = $sftp_21->getSize("daily_subscription_report_MSME_2024-11-01.csv");
+    var_dump($filesize).die();
+}
+
+function testMove($sftp_21)
+{
+    $moveFile = $sftp_21->move("/folder_testing/exampletest_stream.txt", "/");
+    var_dump($moveFile).die();
+}
+
+function testRename($sftp_21, $filesystem)
+{
+    //$rename = $sftp_21->rename('folder_testing/example-rename.txt', 'folder_testing/example-rename-new.txt');
+    $rename = $filesystem->rename('folder_testing/example-rename.txt', 'folder_testing/example-rename-new.txt');
+    var_dump($rename).die();
+}
+
+function testUpdateStream($sftp_21, $filesystem)
+{
+    $new_content = "this is content of new coppier Stream 2010 with filesystem";
+    $stream_content = $sftp_21->getDataStreamBiner($new_content);
+    //$update_stream = $sftp_21->updateStream("folder_testing/copier-example.txt", $stream_content);
+    $update_stream = $filesystem->update("folder_testing/copier-example.txt", $new_content);
+    var_dump($update_stream).die();
+}
+
+function testUpdate($sftp_21, $filesystem)
+{
+    $new_content = "this is content of new coppier via filesystem";
+    //$update = $sftp_21->update("folder_testing/copier-example.txt", $new_content);
+    $update = $filesystem->update("folder_testing/copier-example.txt", $new_content);
+    var_dump($update).die();
+}
+
+function testCopy21($sftp_21)
+{
+    $copier = $sftp_21->copy('/copier-example.txt', 'folder_testing/copier-example.txt');
+    var_dump($copier).die();
+}
 
 function testCopy($filesystem)
 {
@@ -49,10 +164,10 @@ function testDeleteDir($filesystem)
     var_dump($deleteDir).die();
 }
 
-function testCreateDir($filesystem)
+function testCreateDir($filesystem, $sftp_21)
 {
-    //$create_dir = $filesystem->createDir('testing2/subtest/dir1');
-    $create_dir = $filesystem->createDir('testing2');
+    //$create_dir = $filesystem->createDir('testing21/abc/123');
+    $create_dir = $sftp_21->createDir('testing21/abc/123/dir1');
     var_dump($create_dir).die();
 }
 
@@ -62,10 +177,13 @@ function testDelete($filesystem)
     var_dump($delete_file).die();
 }
 
-function testReadStream($filesystem)
+function testReadStream($filesystem, $sftp_21)
 {
-    $read_stream = $filesystem->readStream('example212.txt');
-    var_dump( stream_get_contents($read_stream) ).die();
+    // $read_stream = $filesystem->readStream('example212.txt');
+    //var_dump( stream_get_contents($read_stream) ).die();
+
+    $read_stream = $sftp_21->readStream('example212.txt');
+    var_dump($read_stream).die();
 }
 
 function testHas($filesystem)
@@ -80,9 +198,10 @@ function testRead($filesystem)
     var_dump($read_file).die();
 }
 
-function testListContents($filesystem)
+function testListContents($filesystem, $sftp_21)
 {
-    $listFiles = $filesystem->listContents();
+    //$listFiles = $filesystem->listContents();
+    $listFiles = $sftp_21->listContents();
     var_dump($listFiles).die();
 }
 

@@ -287,7 +287,7 @@ class Sftp21 implements AdapterInterface{
         $file_content = $this->readStream($path);
         if(! isset($file_content["stream"]) )
         {
-            throw new \Exception("failed read file on : " . $$path);
+            throw new \Exception("failed read file on : " . $path);
         }
 
         return $this->writeStream($newpath, $file_content["stream"]);
@@ -313,10 +313,19 @@ class Sftp21 implements AdapterInterface{
 
     public function createDir($dirname = '', $recursive = false) {
         
+        if(empty($dirname))
+        {
+            throw new \Exception("directory name should not be empty");
+        }
+
         $isDirExists = $this->sftp_libs->chdir($dirname);
         if( $isDirExists )
         {
             throw new \Exception("directory already exists");
+        }
+        if($recursive)
+        {
+            return $this->sftp_libs->mkdir($dirname,0777, true);
         }
         return $this->sftp_libs->mkdir($dirname);
     }
